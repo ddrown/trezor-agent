@@ -147,6 +147,14 @@ def decompress_pubkey(pubkey, curve_name):
         }[curve_name]
         vk = decompress(pubkey)
 
+    # handle uncompressed points
+    if len(pubkey) == 65 and curve_name == CURVE_NIST256:
+        curve = ecdsa.NIST256p
+        x = util.bytes2num(pubkey[1:33])
+        y = util.bytes2num(pubkey[33:65])
+        point = ecdsa.ellipticcurve.Point(curve.curve, x, y)
+        vk = ecdsa.VerifyingKey.from_public_point(point, curve=curve, hashfunc=hashfunc)
+
     if not vk:
         msg = 'invalid {!s} public key: {!r}'.format(curve_name, pubkey)
         raise ValueError(msg)
